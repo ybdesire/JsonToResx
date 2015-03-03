@@ -4,7 +4,7 @@ import codecs
 import collections
 from xml.sax.saxutils import escape
 
-repoDir = 'E:\prog\JsonToResx'  #repository path of EN resouce files 
+repoDir = 'C:\\Users\\biny\\Desktop\\Test\\json-leverage-test'  #repository path of EN resouce files 
 
 def getKeyValueOfJson(data):
     key=""
@@ -58,13 +58,21 @@ def getJsonPathAndCopyResxTmp():
         for filesPath in files:
             if os.path.splitext(filesPath)[1] == '.json':
                 jsonFilePath = root+'\\'+filesPath
-                createBlankResxForJson(os.path.dirname(jsonFilePath), os.path.basename(jsonFilePath)+'.resx')
+                resxFilePath = createBlankResxForJson(jsonFilePath)
                 dataOrderDict = getKeyValueFromJson(jsonFilePath)
-                insertJsonKeyValuesIntoResx(dataOrderDict, os.path.dirname(jsonFilePath) + '\\' + os.path.basename(jsonFilePath)+'.resx')
+                insertJsonKeyValuesIntoResx(dataOrderDict, resxFilePath)
 
 # Create a blank resx file wth utf-8 encoding
-def createBlankResxForJson(jsonFileDir, resxFileName):
+def createBlankResxForJson(jsonFilePath):
+    resxFileName = ""
+    for localDir in ['\\de\\', '\\es\\', '\\fr\\', '\\ja\\', '\\ko\\', '\\nl\\', '\\pt-BR\\', '\\ru\\', '\\zh-CN\\']:
+        if localDir in jsonFilePath:
+            resxFileName = 'en.json' + '.' + localDir.split('\\')[1] + '.resx'
+        else:
+            resxFileName = 'en.json.resx'
+    jsonFileDir = os.path.dirname(jsonFilePath)
     codecs.open(jsonFileDir + '\\' + resxFileName, 'w+', 'utf-8-sig')
+    return jsonFileDir + '\\' + resxFileName
 
 # Get key value pairs from json file in ordered dictionary
 def getKeyValueFromJson(jsonFilePath):
@@ -104,7 +112,20 @@ def insertJsonKeyValuesIntoResx(dataOrderDict, resxFilePath):
         #write resx file end
         resxFile.write("\n</root>")
 
+def test():
+    for root,dirs,files in os.walk(repoDir):
+        for filesPath in files:
+            if os.path.splitext(filesPath)[1] == '.json':
+                jsonFilePath = root+'\\'+filesPath
+                #createBlankResxForJson(os.path.dirname(jsonFilePath), os.path.basename(jsonFilePath)+'.resx')
+                #dataOrderDict = getKeyValueFromJson(jsonFilePath)
+                for localDir in ['\\de\\', '\\en\\', '\\es\\', '\\fr\\', '\\ja\\', '\\ko\\', '\\nl\\', '\\pt-BR\\', '\\ru\\', '\\zh-CN\\']:
+                    if localDir in jsonFilePath:
+                        print(localDir.split('\\')[1])
+                #insertJsonKeyValuesIntoResx(dataOrderDict, os.path.dirname(jsonFilePath) + '\\' + os.path.basename(jsonFilePath)+'.resx')
+
      
 if __name__ == "__main__":
     getJsonPathAndCopyResxTmp()
+    #test()
 
