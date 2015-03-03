@@ -6,58 +6,12 @@ from xml.sax.saxutils import escape
 
 repoDir = 'C:\\Users\\biny\\Desktop\\Test\\json-leverage-test'  #repository path of EN resouce files 
 
-def getKeyValueOfJson(data):
-    key=""
-    value=""
-    diData=collections.OrderedDict()
-    for key1, value1 in data.items():
-        key = key1
-        value = value1
-        if(isinstance(data[key1], dict)):
-            for key2, value2 in data[key].items():
-                key = key1 + '%' + key2
-                value = value2
-                if(isinstance(data[key1][key2], dict)):
-                    for key3, value3 in data[key1][key2].items():
-                        key = key1 + '%' + key2 + '%' + key3
-                        value = value3
-                        if(isinstance(data[key1][key2][key3], dict)):
-                            print("unsupport")
-                        else:
-                            diData[key]=value
-                else:
-                    diData[key]=value
-        else:
-            diData[key]=value
-    return diData
-
-
-def main():
-    fileData = codecs.open('en.json', 'r', 'utf-8-sig').read()
-    data = json.loads(fileData)
-    data_dict = getKeyValueOfJson(data)
-    dataOrderDict = collections.OrderedDict(sorted(data_dict.items(), key=lambda t: t[0]))
-
-    #for key, value in dataOrderDict.items():
-    #    print(key + ", " + value)
-
-    with codecs.open('template.resx', 'a', 'utf-8-sig') as resxFile:
-        for key, value in dataOrderDict.items():
-            resxFile.write('\r  <data name="'+key)
-            resxFile.write('" xml:space="preserve">\r')
-            resxFile.write('    <value>')
-            resxFile.write(value)
-            resxFile.write('</value>')
-            resxFile.write('\r  </data>')
-        
-        resxFile.write("\r</root>")
-
 # go through directory(repoDir), detect *.json file, get resources from *.json file and insert into resx file
-def getJsonPathAndCopyResxTmp():
+def main():
     for root,dirs,files in os.walk(repoDir):
-        for filesPath in files:
-            if os.path.splitext(filesPath)[1] == '.json':
-                jsonFilePath = root+'\\'+filesPath
+        for filePath in files:
+            if os.path.splitext(filePath)[1] == '.json':
+                jsonFilePath = root+'\\'+filePath
                 resxFilePath = createBlankResxForJson(jsonFilePath)
                 dataOrderDict = getKeyValueFromJson(jsonFilePath)
                 insertJsonKeyValuesIntoResx(dataOrderDict, resxFilePath)
@@ -65,10 +19,10 @@ def getJsonPathAndCopyResxTmp():
 # Create a blank resx file wth utf-8 encoding
 def createBlankResxForJson(jsonFilePath):
     resxFileName = ""
-    for localDir in ['\\de\\', '\\es\\', '\\fr\\', '\\ja\\', '\\ko\\', '\\nl\\', '\\pt-BR\\', '\\ru\\', '\\zh-CN\\']:
-        if localDir in jsonFilePath:
-            resxFileName = 'en.json' + '.' + localDir.split('\\')[1] + '.resx'
-        else:
+    for localeDir in ['\\de\\', '\\es\\', '\\fr\\', '\\ja\\', '\\ko\\', '\\nl\\', '\\pt-BR\\', '\\ru\\', '\\zh-CN\\']:
+        if localeDir in jsonFilePath:#if non-EN file, create en.json.zh-CN.resx
+            resxFileName = 'en.json' + '.' + localeDir.split('\\')[1] + '.resx'
+        else:#if EN file, create en.json.resx
             resxFileName = 'en.json.resx'
     jsonFileDir = os.path.dirname(jsonFilePath)
     codecs.open(jsonFileDir + '\\' + resxFileName, 'w+', 'utf-8-sig')
@@ -79,7 +33,7 @@ def getKeyValueFromJson(jsonFilePath):
     jsonFileData = codecs.open(jsonFilePath, 'r', 'utf-8-sig').read()
     jsonDictData = json.loads(jsonFileData)
     jsonKeyValueDictData = getKeyValueOfJson(jsonDictData)
-    jsonDataOrderDict = collections.OrderedDict(sorted(jsonKeyValueDictData.items(), key=lambda t: t[0]))#sort by key
+    jsonDataOrderDict = collections.OrderedDict(sorted(jsonKeyValueDictData.items(), key=lambda t: t[0]))#sort by key, get a sorted dict which can be assessed by 'for-in' with sequence data output
     return jsonDataOrderDict
 
 def insertJsonKeyValuesIntoResx(dataOrderDict, resxFilePath):
@@ -100,7 +54,7 @@ def insertJsonKeyValuesIntoResx(dataOrderDict, resxFilePath):
         resxFile.write('    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>\n')
         resxFile.write('  </resheader>\n')
   
-        #write key & value
+        #write key & value with XML escape
         for key, value in dataOrderDict.items():
             resxFile.write('  <data name="'+escape(key))
             resxFile.write('" xml:space="preserve">\n')
@@ -112,20 +66,56 @@ def insertJsonKeyValuesIntoResx(dataOrderDict, resxFilePath):
         #write resx file end
         resxFile.write("\n</root>")
 
-def test():
+def getKeyValueOfJson(data):
+    key=""
+    value=""
+    diData=collections.OrderedDict()
+    for key1, value1 in data.items():
+        key = key1
+        value = value1
+        if(isinstance(data[key1], dict)):
+            for key2, value2 in data[key].items():
+                key = key1 + '%' + key2
+                value = value2
+                if(isinstance(data[key1][key2], dict)):
+                    for key3, value3 in data[key1][key2].items():
+                        key = key1 + '%' + key2 + '%' + key3
+                        value = value3
+                        if(isinstance(data[key1][key2][key3], dict)):
+                            print("unsupport")#json resource depth > 3, which cannot be supported by this script
+                        else:
+                            diData[key]=value
+                else:
+                    diData[key]=value
+        else:
+            diData[key]=value
+    return diData
+	
+	
+def testJsonLoad():
+    fileData = codecs.open('en.json', 'r', 'utf-8-sig').read()
+    data = json.loads(fileData)
+    data_dict = getKeyValueOfJson(data)
+    dataOrderDict = collections.OrderedDict(sorted(data_dict.items(), key=lambda t: t[0]))
+
+    with codecs.open('template.resx', 'a', 'utf-8-sig') as resxFile:
+        for key, value in dataOrderDict.items():
+            resxFile.write('\r  <data name="'+key)
+            resxFile.write('" xml:space="preserve">\r')
+            resxFile.write('    <value>')
+            resxFile.write(value)
+            resxFile.write('</value>')
+            resxFile.write('\r  </data>')
+        
+        resxFile.write("\r</root>")
+
+def testFunc():
     for root,dirs,files in os.walk(repoDir):
         for filesPath in files:
             if os.path.splitext(filesPath)[1] == '.json':
-                jsonFilePath = root+'\\'+filesPath
-                #createBlankResxForJson(os.path.dirname(jsonFilePath), os.path.basename(jsonFilePath)+'.resx')
-                #dataOrderDict = getKeyValueFromJson(jsonFilePath)
-                for localDir in ['\\de\\', '\\en\\', '\\es\\', '\\fr\\', '\\ja\\', '\\ko\\', '\\nl\\', '\\pt-BR\\', '\\ru\\', '\\zh-CN\\']:
-                    if localDir in jsonFilePath:
-                        print(localDir.split('\\')[1])
-                #insertJsonKeyValuesIntoResx(dataOrderDict, os.path.dirname(jsonFilePath) + '\\' + os.path.basename(jsonFilePath)+'.resx')
+                print(filesPath)
 
-     
+		
 if __name__ == "__main__":
-    getJsonPathAndCopyResxTmp()
-    #test()
+    main()
 
