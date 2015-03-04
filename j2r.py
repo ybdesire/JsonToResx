@@ -12,9 +12,12 @@ def main():
         for filePath in files:
             if os.path.splitext(filePath)[1] == '.json':
                 jsonFilePath = root+'\\'+filePath
-                resxFilePath = createBlankResxForJson(jsonFilePath)
-                dataOrderDict = getKeyValueFromJson(jsonFilePath)
-                insertJsonKeyValuesIntoResx(dataOrderDict, resxFilePath)
+                if(isJson(jsonFilePath)):
+                    resxFilePath = createBlankResxForJson(jsonFilePath)
+                    dataOrderDict = getKeyValueFromJson(jsonFilePath)
+                    insertJsonKeyValuesIntoResx(dataOrderDict, resxFilePath)
+                else:
+                    print('ERROR: invalid json file, please check the json content')
 
 # Create a blank resx file wth utf-8 encoding
 def createBlankResxForJson(jsonFilePath):
@@ -90,7 +93,19 @@ def getKeyValueOfJson(data):
         else:
             diData[key]=value
     return diData
-	
+
+#validate if a json file is correct
+def isJson(filePath):
+    try:
+        fileData = codecs.open(filePath, 'r', 'utf-8-sig').read()
+        data = json.loads(fileData)
+    except ValueError, e:
+        print('JSON FILE ERROR: ' + filePath)
+        print(ValueError)
+        print(e)
+        return False
+    return True
+
 	
 def testJsonLoad():
     fileData = codecs.open('en.json', 'r', 'utf-8-sig').read()
