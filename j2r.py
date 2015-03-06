@@ -99,7 +99,7 @@ def isJson(filePath):
     try:
         fileData = codecs.open(filePath, 'r', 'utf-8-sig').read()
         data = json.loads(fileData)
-    except ValueError, e:
+    except ValueError as e:
         print('JSON FILE ERROR: ' + filePath)
         print(ValueError)
         print(e)
